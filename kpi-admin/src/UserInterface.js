@@ -1,13 +1,23 @@
 import React, { useState } from "react";
+import { useAuth } from './AuthContext';
 
 const departments = [
   "BKP", "MCP", "BWP", "UI", "UUU", "BPA", "MCL", "UAD", "BPPH", "UKK", "BPSM", "BAZ", "BTM", "BPI - Dar Assaadah", "BPI - Darul Ilmi", "BPI - Darul Kifayah", "BPI - HQ", "BPI - IKB", "BPI - PMA", "BPI - SMA-MAIWP", "BPI - SMISTA"
 ];
 
 function UserInterface({ kpiList, onUpdateKPI }) {
+  const { userRole, userDepartment } = useAuth();
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [filteredKPIs, setFilteredKPIs] = useState([]);
+
+  // Get filtered departments based on user role
+  const getFilteredDepartments = () => {
+    if (userRole === 'admin_bahagian' && userDepartment) {
+      return [userDepartment]; // Only show assigned department
+    }
+    return departments; // Show all departments for admin
+  };
 
   // Filter KPI berdasarkan bahagian dan kategori
   const filterKPIs = () => {
@@ -29,6 +39,13 @@ function UserInterface({ kpiList, onUpdateKPI }) {
     setSelectedCategory("");
     setFilteredKPIs([]);
   };
+
+  // Auto-select department for admin_bahagian
+  React.useEffect(() => {
+    if (userRole === 'admin_bahagian' && userDepartment) {
+      setSelectedDepartment(userDepartment);
+    }
+  }, [userRole, userDepartment]);
 
   // Ubah handleCategoryChange supaya jika 'Keseluruhan', tapis semua kategori
   const handleCategoryChange = (e) => {
@@ -232,10 +249,20 @@ function UserInterface({ kpiList, onUpdateKPI }) {
             <select 
               value={selectedDepartment} 
               onChange={handleDepartmentChange}
-              style={{ width: '100%', padding: 12, borderRadius: 8, border: '1.5px solid #1976d2', fontSize: 16, outline: 'none' }}
+              disabled={userRole === 'admin_bahagian'}
+              style={{ 
+                width: '100%', 
+                padding: 12, 
+                borderRadius: 8, 
+                border: '1.5px solid #1976d2', 
+                fontSize: 16, 
+                outline: 'none',
+                opacity: userRole === 'admin_bahagian' ? 0.6 : 1,
+                backgroundColor: userRole === 'admin_bahagian' ? '#f5f5f5' : '#fff'
+              }}
             >
               <option value="">-- Pilih Bahagian --</option>
-              {departments.map((dept, i) => (
+              {getFilteredDepartments().map((dept, i) => (
                 <option key={i} value={dept}>{dept}</option>
               ))}
             </select>

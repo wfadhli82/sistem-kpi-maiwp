@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from './supabase';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
@@ -9,51 +8,77 @@ function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  // Helper: get users from localStorage
+  const getUsers = () => JSON.parse(localStorage.getItem('users') || '[]');
+  // Helper: save users to localStorage
+  const saveUsers = (users) => localStorage.setItem('users', JSON.stringify(users));
+
+  // Helper: set current user session
+  const setCurrentUser = (user) => localStorage.setItem('currentUser', JSON.stringify(user));
+
+  const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        console.log('Login berjaya:', data.user);
-        navigate('/');
+    setTimeout(() => {
+      const users = getUsers();
+      console.log('All users in localStorage:', users);
+      console.log('Attempting login with:', { email, password });
+      
+      // Find user by email
+      const user = users.find(u => u.email === email);
+      console.log('Found user:', user);
+      
+      if (!user) {
+        setError('Emel tidak dijumpai.');
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      setError('Ralat sistem. Sila cuba lagi.');
-    } finally {
+      
+      // Check password if user has password field
+      if (user.password) {
+        if (user.password !== password) {
+          setError('Kata laluan tidak sah.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // User exists but no password - allow login without password
+        console.log('User has no password - allowing login without password');
+      }
+      
+      setCurrentUser(user);
       setLoading(false);
-    }
+      navigate('/');
+    }, 500);
   };
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setError('Sila check email anda untuk pengesahan.');
+    setTimeout(() => {
+      let users = getUsers();
+      if (users.some(u => u.email === email)) {
+        setError('Emel sudah didaftarkan.');
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      setError('Ralat sistem. Sila cuba lagi.');
-    } finally {
+      // Default role: user, unless admin/admin_bahagian ditambah dari Pengurusan Pengguna
+      const newUser = {
+        id: 'user-' + Date.now(),
+        name: email.split('@')[0],
+        email,
+        password,
+        role: 'user',
+        department: null
+      };
+      users.push(newUser);
+      saveUsers(users);
+      setCurrentUser(newUser);
       setLoading(false);
-    }
+      navigate('/');
+    }, 500);
   };
 
   return (
@@ -196,13 +221,12 @@ function Login() {
 
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#333' }}>
-                Kata Laluan:
+                Kata Laluan: <span style={{ color: '#666', fontSize: '0.9rem', fontWeight: 'normal' }}>(Opsional untuk user tanpa password)</span>
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -212,7 +236,7 @@ function Login() {
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
-                placeholder="Masukkan kata laluan"
+                placeholder="Masukkan kata laluan (atau kosongkan jika tiada password)"
               />
             </div>
 
@@ -260,6 +284,6 @@ function Login() {
       </div>
     </div>
   );
-}
-
-export default Login; 
+  }
+  
+  export default Login; 

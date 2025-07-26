@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { user, userRole, userDepartment, loading } = useAuth();
 
   if (loading) {
     return (
@@ -28,6 +28,21 @@ function ProtectedRoute({ children }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check role-based access
+  if (requiredRole) {
+    const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    console.log('Required roles:', allowedRoles);
+    console.log('User role:', userRole);
+    console.log('User department:', userDepartment);
+    
+    if (!allowedRoles.includes(userRole)) {
+      console.log('Access denied - redirecting to dashboard');
+      // Redirect to dashboard if user doesn't have required role
+      return <Navigate to="/" replace />;
+    }
+    console.log('Access granted');
   }
 
   return children;

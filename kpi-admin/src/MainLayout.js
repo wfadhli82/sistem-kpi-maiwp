@@ -3,6 +3,7 @@ import { Box, CssBaseline, Drawer, Toolbar, List, ListItem, ListItemIcon, ListIt
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
@@ -12,19 +13,73 @@ const drawerWidth = 220;
 function MainLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, userRole } = useAuth();
+  
+  console.log('MainLayout - Current user:', user?.email);
+  console.log('MainLayout - Current userRole:', userRole);
+  console.log('MainLayout - Current location:', location.pathname);
+  
+  // Debug role changes
+  React.useEffect(() => {
+    console.log('MainLayout - Role changed to:', userRole);
+    console.log('MainLayout - Location changed to:', location.pathname);
+    
+    // Special debug for Dashboard navigation
+    if (location.pathname === '/') {
+      console.log('=== DASHBOARD NAVIGATION DEBUG ===');
+      console.log('Current userRole:', userRole);
+      console.log('Current user:', user?.email);
+      console.log('Menu items should include Pengurusan Pengguna:', userRole === 'admin');
+    }
+  }, [userRole, location.pathname]);
   
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
 
-  const menu = [
-    { label: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { label: 'Admin Utama', icon: <AssessmentIcon />, path: '/admin-utama' },
-    { label: 'Admin Bahagian', icon: <NotificationsIcon />, path: '/admin-bahagian' },
-    { label: 'Log Keluar', icon: <LogoutIcon />, path: null, action: handleLogout },
-  ];
+  // Filter menu based on user role
+  const getFilteredMenu = () => {
+    const allMenu = [
+      { label: 'Dashboard', icon: <DashboardIcon />, path: '/', roles: ['admin', 'admin_bahagian', 'user'] },
+      { label: 'Admin Utama', icon: <AssessmentIcon />, path: '/admin-utama', roles: ['admin'] },
+      { label: 'Admin Bahagian', icon: <NotificationsIcon />, path: '/admin-bahagian', roles: ['admin', 'admin_bahagian'] },
+      { label: 'Pengurusan Pengguna', icon: <PeopleIcon />, path: '/user-management', roles: ['admin'] },
+      { label: 'Log Keluar', icon: <LogoutIcon />, path: null, action: handleLogout, roles: ['admin', 'admin_bahagian', 'user'] },
+    ];
+
+      console.log('User role in MainLayout:', userRole);
+  console.log('All menu items:', allMenu);
+  const filteredMenu = allMenu.filter(item => {
+    const hasAccess = item.roles.includes(userRole);
+    console.log(`Menu "${item.label}": ${hasAccess ? 'SHOW' : 'HIDE'} (roles: ${item.roles}, userRole: ${userRole})`);
+    
+    // Special debug for Pengurusan Pengguna
+    if (item.label === 'Pengurusan Pengguna') {
+      console.log('=== PENGURUSAN PENGGUNA DEBUG ===');
+      console.log('Item roles:', item.roles);
+      console.log('User role:', userRole);
+      console.log('Has access:', hasAccess);
+      console.log('Roles includes userRole:', item.roles.includes(userRole));
+    }
+    
+    return hasAccess;
+  });
+  console.log('Filtered menu:', filteredMenu);
+  return filteredMenu;
+  };
+
+  const menu = getFilteredMenu();
+  
+  // Force re-render when userRole or location changes
+  const menuKey = `${userRole}-${location.pathname}-${Date.now()}`;
+  console.log('Final menu array length:', menu.length);
+  console.log('Final menu items:', menu.map(item => item.label));
+  
+  // Check if Pengurusan Pengguna is in the menu
+  const hasPengurusanPengguna = menu.some(item => item.label === 'Pengurusan Pengguna');
+  console.log('Menu contains Pengurusan Pengguna:', hasPengurusanPengguna);
+  
   return (
     <Box sx={{ display: 'flex', bgcolor: '#f4f6f8', minHeight: '100vh' }}>
       <CssBaseline />
@@ -45,11 +100,10 @@ function MainLayout({ children }) {
             <div style={{ fontSize: '16px', color: '#fff', fontWeight: 600 }}>{user.email}</div>
           </div>
         )}
-        <List>
+        <List key={menuKey}>
           {menu.map((item, idx) => (
             <ListItem
               key={item.label}
-              button
               onClick={() => {
                 if (item.action) {
                   item.action();

@@ -11,6 +11,7 @@ import MainLayout from './MainLayout';
 import Login from './Login';
 import { AuthProvider, useAuth } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import UserManagement from './UserManagement';
 
 const departments = [
   "BKP", "MCP", "BWP", "UI", "UUU", "BPA", "MCL", "UAD", "BPPH", "UKK", "BPSM", "BAZ", "BTM", "BPI - Dar Assaadah", "BPI - Darul Ilmi", "BPI - Darul Kifayah", "BPI - HQ", "BPI - IKB", "BPI - PMA", "BPI - SMA-MAIWP", "BPI - SMISTA"
@@ -351,6 +352,11 @@ export default function App() {
             <Route path="/admin-bahagian" element={
               <ProtectedRoute>
                 <MainLayout><UserInterface kpiList={kpiList} onUpdateKPI={handleUpdateKPI} /></MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/user-management" element={
+              <ProtectedRoute>
+                <MainLayout><UserManagement /></MainLayout>
               </ProtectedRoute>
             } />
           </Routes>

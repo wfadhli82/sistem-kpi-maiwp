@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Box, CssBaseline, Drawer, List, ListItem, ListItemIcon, ListItemText, Grid, Paper, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, CssBaseline, Grid, Paper, IconButton } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -194,43 +194,10 @@ function Dashboard({ kpiList = [] }) {
   }));
 
   return (
-    <Box sx={{ display: 'flex', bgcolor: '#f4f6f8', minHeight: '100vh' }}>
+    <Box sx={{ bgcolor: '#f4f6f8', minHeight: '100vh' }}>
       <CssBaseline />
-      {/* Sidebar */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', bgcolor: '#212b36', color: '#fff' },
-        }}
-      >
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-            Sistem KPI
-          </Typography>
-        </Toolbar>
-        <List>
-          <ListItem button selected onClick={() => navigate('/') }>
-            <ListItemIcon sx={{ color: '#fff' }}><DashboardIcon /></ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItem>
-          <ListItem button onClick={() => navigate('/admin-utama')}>
-            <ListItemIcon sx={{ color: '#fff' }}><AssessmentIcon /></ListItemIcon>
-            <ListItemText primary="Admin Utama" />
-          </ListItem>
-          <ListItem button onClick={() => navigate('/admin-bahagian')}>
-            <ListItemIcon sx={{ color: '#fff' }}><NotificationsIcon /></ListItemIcon>
-            <ListItemText primary="Admin Bahagian" />
-          </ListItem>
-          <ListItem button>
-            <ListItemIcon sx={{ color: '#fff' }}><LogoutIcon /></ListItemIcon>
-            <ListItemText primary="Log Keluar" />
-          </ListItem>
-        </List>
-      </Drawer>
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ p: 3 }}>
         {/* Submenu/tab */}
         <Box sx={{ 
           display: 'flex', 
@@ -331,60 +298,60 @@ function Dashboard({ kpiList = [] }) {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                          <Box sx={{ 
-                      width: 48, 
-                      height: 48, 
-                      borderRadius: '50%', 
-                      background: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mr: 2,
-                      border: `2px solid ${item.borderColor}`,
-                      flexShrink: 0
+                  <Box sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    borderRadius: '50%', 
+                    background: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2,
+                    border: `2px solid ${item.borderColor}`,
+                    flexShrink: 0
+                  }}>
+                    <Box sx={{ 
+                      color: item.iconColor,
+                      fontSize: 20
                     }}>
-                      <Box sx={{ 
-                        color: item.iconColor,
-                        fontSize: 20
-                      }}>
-                        {item.icon}
-                      </Box>
+                      {item.icon}
                     </Box>
-                                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography 
-                        variant="h4" 
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#111827', 
-                          mb: 0.5,
-                          fontSize: '1.75rem',
-                          lineHeight: 1.2,
-                          minHeight: '2.1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-start',
-                          width: '100%'
-                        }}
-                      >
-                        {item.value}
-                      </Typography>
-                      <Typography 
-                        sx={{ 
-                          fontSize: 12, 
-                          fontWeight: 500,
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          minHeight: '1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-start',
-                          width: '100%'
-                        }}
-                      >
-                        {item.label}
-                      </Typography>
-                    </Box>
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 800, 
+                        color: '#111827', 
+                        mb: 0.5,
+                        fontSize: '1.75rem',
+                        lineHeight: 1.2,
+                        minHeight: '2.1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        width: '100%'
+                      }}
+                    >
+                      {item.value}
+                    </Typography>
+                    <Typography 
+                      sx={{ 
+                        fontSize: 12, 
+                        fontWeight: 500,
+                        color: '#6b7280',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        minHeight: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        width: '100%'
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                  </Box>
                 </Box>
               </Paper>
             </Grid>

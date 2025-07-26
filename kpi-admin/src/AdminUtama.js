@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useAuth } from './AuthContext';
 
 const departments = [
   "BKP", "MCP", "BWP", "UI", "UUU", "BPA", "MCL", "UAD", "BPPH", "UKK", "BPSM", "BAZ", "BTM", "BPI - Dar Assaadah", "BPI - Darul Ilmi", "BPI - Darul Kifayah", "BPI - HQ", "BPI - IKB", "BPI - PMA", "BPI - SMA-MAIWP", "BPI - SMISTA"
@@ -36,6 +37,7 @@ const initialForm = {
 };
 
 function AdminUtama({ kpiList, setKpiList, handleDownloadExcel, handleExcelUpload }) {
+  const { userRole, userDepartment } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [editIdx, setEditIdx] = useState(null);
   const [tahapSelected, setTahapSelected] = useState(null);
@@ -45,8 +47,17 @@ function AdminUtama({ kpiList, setKpiList, handleDownloadExcel, handleExcelUploa
   // Dapatkan senarai bahagian unik dari data
   const bahagianList = Array.from(new Set(kpiList.map(item => item.department))).filter(Boolean);
 
-  // Tapis data ikut filter
+  // Tapis data ikut filter dan user role
   const filteredKpiList = kpiList.filter(item => {
+    // Role-based filtering
+    if (userRole === 'admin_bahagian' && userDepartment) {
+      // Admin bahagian hanya boleh tengok bahagian mereka
+      if (item.department !== userDepartment) {
+        return false;
+      }
+    }
+    
+    // Regular filtering
     const matchBahagian = filterBahagian === 'Keseluruhan' || item.department === filterBahagian;
     const matchKategori = filterKategoriUtama === 'Keseluruhan' || (item.kategoriUtama || '').toUpperCase() === filterKategoriUtama.toUpperCase();
     return matchBahagian && matchKategori;
