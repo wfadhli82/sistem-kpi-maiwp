@@ -275,9 +275,9 @@ function Dashboard({ kpiList = [] }) {
           </Toolbar>
         </AppBar>
         {/* Summary Cards */}
-        <Grid container spacing={2} mb={3}>
+        <Grid container spacing={3} mb={3} sx={{ display: 'flex', flexWrap: 'nowrap' }}>
           {summaryData.map((item, idx) => (
-            <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={idx} sx={{ minWidth: '250px' }}>
+            <Grid item key={idx} sx={{ flex: '1 1 25%', minWidth: 0 }}>
               <Paper 
                 elevation={2} 
                 sx={{ 
@@ -286,8 +286,7 @@ function Dashboard({ kpiList = [] }) {
                   background: '#ffffff',
                   border: '1px solid #f0f0f0',
                   transition: 'all 0.3s ease',
-                  minHeight: '120px',
-                  minWidth: '220px',
+                  height: '140px',
                   display: 'flex',
                   alignItems: 'center',
                   '&:hover': {
@@ -297,7 +296,7 @@ function Dashboard({ kpiList = [] }) {
                   }
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <Box sx={{ 
                     width: 48, 
                     height: 48, 
@@ -326,7 +325,7 @@ function Dashboard({ kpiList = [] }) {
                         mb: 0.5,
                         fontSize: '1.75rem',
                         lineHeight: 1.2,
-                        minHeight: '2.1rem',
+                        height: '2.1rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'flex-start',
@@ -342,7 +341,7 @@ function Dashboard({ kpiList = [] }) {
                         color: '#6b7280',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        minHeight: '1rem',
+                        height: '1rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'flex-start',

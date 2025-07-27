@@ -129,24 +129,63 @@ function UserInterface({ kpiList, onUpdateKPI }) {
           />
         );
       case "Peratus":
+        const peratusSebenar = kpi.peratus.y && kpi.peratus.x ? ((kpi.peratus.x / kpi.peratus.y) * 100).toFixed(2) : "-";
         return (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ minWidth: 60, fontWeight: 600, color: '#1976d2' }}>{kpi.peratus.labelY || 'y'}:</span>
-            <input
-              type="number"
-              value={kpi.peratus.y || ""}
-              onChange={(e) => handleUpdateKPI(index, 'peratusY', e.target.value)}
-              style={{ width: '70px', padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14 }}
-              placeholder="y"
-            />
-            <span style={{ minWidth: 60, fontWeight: 600, color: '#1976d2' }}>{kpi.peratus.labelX || 'x'}:</span>
-            <input
-              type="number"
-              value={kpi.peratus.x || ""}
-              onChange={(e) => handleUpdateKPI(index, 'peratusX', e.target.value)}
-              style={{ width: '70px', padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14 }}
-              placeholder="x"
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelY || 'y'}:</span>
+              <input
+                type="number"
+                value={kpi.peratus.y || ""}
+                onChange={(e) => handleUpdateKPI(index, 'peratusY', e.target.value)}
+                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                placeholder="y"
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelX || 'x'}:</span>
+              <input
+                type="number"
+                value={kpi.peratus.x || ""}
+                onChange={(e) => handleUpdateKPI(index, 'peratusX', e.target.value)}
+                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                placeholder="x"
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>%:</span>
+              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 70, textAlign: 'right' }}>{peratusSebenar}</span>
+            </div>
+          </div>
+        );
+      case "Peratus Minimum":
+        const peratusMinSebenar = kpi.peratus.y && kpi.peratus.x ? ((kpi.peratus.x / kpi.peratus.y) * 100).toFixed(2) : "-";
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelY || 'y'}:</span>
+              <input
+                type="number"
+                value={kpi.peratus.y || ""}
+                onChange={(e) => handleUpdateKPI(index, 'peratusY', e.target.value)}
+                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                placeholder="y"
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelX || 'x'}:</span>
+              <input
+                type="number"
+                value={kpi.peratus.x || ""}
+                onChange={(e) => handleUpdateKPI(index, 'peratusX', e.target.value)}
+                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                placeholder="x"
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>%:</span>
+              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 70, textAlign: 'right' }}>{peratusMinSebenar}</span>
+            </div>
           </div>
         );
       case "Masa":
@@ -297,8 +336,7 @@ function UserInterface({ kpiList, onUpdateKPI }) {
                   <th style={{ padding: 12, fontWeight: 700, textAlign: 'left', fontSize: 14 }}>Target</th>
                   <th style={{ padding: 12, fontWeight: 700, textAlign: 'left', fontSize: 14 }}>Pencapaian</th>
                   <th style={{ padding: 12, fontWeight: 700, textAlign: 'center', fontSize: 14 }}>% Pencapaian</th>
-                  <th style={{ padding: 12, fontWeight: 700, textAlign: 'right', fontSize: 14 }}>Peruntukan (RM)</th>
-                  <th style={{ padding: 12, fontWeight: 700, textAlign: 'right', fontSize: 14 }}>Perbelanjaan (RM)</th>
+                  <th style={{ padding: 12, fontWeight: 700, textAlign: 'right', fontSize: 14 }}>Peruntukan & Perbelanjaan (RM)</th>
                   <th style={{ padding: 12, fontWeight: 700, textAlign: 'right', fontSize: 14 }}>% Perbelanjaan</th>
                 </tr>
               </thead>
@@ -315,36 +353,40 @@ function UserInterface({ kpiList, onUpdateKPI }) {
                       {kiraPeratusPencapaian(kpi)}
                     </td>
                     <td style={{ padding: 12, fontSize: 14, textAlign: 'right' }}>
-                      <input
-                        type="text"
-                        value={typeof kpi.peruntukan === 'number' || (kpi.peruntukan && kpi.peruntukan !== "") ? formatRM(kpi.peruntukan) : ""}
-                        onChange={e => {
-                          // Buang semua selain nombor dan titik
-                          const raw = e.target.value.replace(/[^\d.]/g, "");
-                          handleUpdateKPI(index, 'peruntukan', raw);
-                        }}
-                        onBlur={e => {
-                          // Formatkan bila keluar fokus
-                          handleUpdateKPI(index, 'peruntukan', formatRM(e.target.value.replace(/[^\d.]/g, "")));
-                        }}
-                        style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
-                        placeholder="0.00"
-                      />
-                    </td>
-                    <td style={{ padding: 12, fontSize: 14, textAlign: 'right' }}>
-                      <input
-                        type="text"
-                        value={typeof kpi.perbelanjaan === 'number' || (kpi.perbelanjaan && kpi.perbelanjaan !== "") ? formatRM(kpi.perbelanjaan) : ""}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^\d.]/g, "");
-                          handleUpdateKPI(index, 'perbelanjaan', raw);
-                        }}
-                        onBlur={e => {
-                          handleUpdateKPI(index, 'perbelanjaan', formatRM(e.target.value.replace(/[^\d.]/g, "")));
-                        }}
-                        style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
-                        placeholder="0.00"
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>Peruntukan:</span>
+                          <input
+                            type="text"
+                            value={typeof kpi.peruntukan === 'number' || (kpi.peruntukan && kpi.peruntukan !== "") ? formatRM(kpi.peruntukan) : ""}
+                            onChange={e => {
+                              const raw = e.target.value.replace(/[^\d.]/g, "");
+                              handleUpdateKPI(index, 'peruntukan', raw);
+                            }}
+                            onBlur={e => {
+                              handleUpdateKPI(index, 'peruntukan', formatRM(e.target.value.replace(/[^\d.]/g, "")));
+                            }}
+                            style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>Perbelanjaan:</span>
+                          <input
+                            type="text"
+                            value={typeof kpi.perbelanjaan === 'number' || (kpi.perbelanjaan && kpi.perbelanjaan !== "") ? formatRM(kpi.perbelanjaan) : ""}
+                            onChange={e => {
+                              const raw = e.target.value.replace(/[^\d.]/g, "");
+                              handleUpdateKPI(index, 'perbelanjaan', raw);
+                            }}
+                            onBlur={e => {
+                              handleUpdateKPI(index, 'perbelanjaan', formatRM(e.target.value.replace(/[^\d.]/g, "")));
+                            }}
+                            style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
                     </td>
                     <td style={{ padding: 12, fontSize: 14, textAlign: 'right', fontWeight: 700, color: '#1976d2' }}>
                       {kpi.percentBelanja || "-"}
