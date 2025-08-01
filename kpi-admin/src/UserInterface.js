@@ -73,6 +73,12 @@ function UserInterface({ kpiList, onUpdateKPI }) {
       updatedKPI.peratus.x = value;
     } else if (field === 'peratusY') {
       updatedKPI.peratus.y = value;
+    } else if (field === 'peratusMinimumX') {
+      if (!updatedKPI.peratusMinimum) updatedKPI.peratusMinimum = {};
+      updatedKPI.peratusMinimum.x = value;
+    } else if (field === 'peratusMinimumY') {
+      if (!updatedKPI.peratusMinimum) updatedKPI.peratusMinimum = {};
+      updatedKPI.peratusMinimum.y = value;
     } else if (field === 'tahapSelected') {
       updatedKPI.tahapSelected = parseInt(value);
     } else {
@@ -115,16 +121,28 @@ function UserInterface({ kpiList, onUpdateKPI }) {
     return num.toLocaleString('ms-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  // Tambah helper untuk format nombor dengan koma
+  function formatNumber(val) {
+    if (val === null || val === undefined || val === "") return "";
+    const num = Number(val);
+    if (isNaN(num)) return val;
+    return num.toLocaleString('ms-MY');
+  }
+
   // Render input field berdasarkan kategori
   const renderInputField = (kpi, index) => {
     switch (kpi.kategori) {
       case "Bilangan":
         return (
           <input
-            type="number"
-            value={kpi.bilangan.pencapaian || ""}
-            onChange={(e) => handleUpdateKPI(index, 'pencapaian', e.target.value)}
-            style={{ width: '84px', padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14 }}
+            type="text"
+            value={formatNumber(kpi.bilangan.pencapaian)}
+            onChange={(e) => {
+              // Remove commas and non-numeric characters for calculation
+              const cleanValue = e.target.value.replace(/[^\d.-]/g, '');
+              handleUpdateKPI(index, 'pencapaian', cleanValue);
+            }}
+            style={{ width: '120px', padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14 }}
             placeholder="Masukkan pencapaian"
           />
         );
@@ -135,56 +153,68 @@ function UserInterface({ kpiList, onUpdateKPI }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelY || 'y'}:</span>
               <input
-                type="number"
-                value={kpi.peratus.y || ""}
-                onChange={(e) => handleUpdateKPI(index, 'peratusY', e.target.value)}
-                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                type="text"
+                value={formatNumber(kpi.peratus.y)}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(/[^\d.-]/g, '');
+                  handleUpdateKPI(index, 'peratusY', cleanValue);
+                }}
+                style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
                 placeholder="y"
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelX || 'x'}:</span>
               <input
-                type="number"
-                value={kpi.peratus.x || ""}
-                onChange={(e) => handleUpdateKPI(index, 'peratusX', e.target.value)}
-                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                type="text"
+                value={formatNumber(kpi.peratus.x)}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(/[^\d.-]/g, '');
+                  handleUpdateKPI(index, 'peratusX', cleanValue);
+                }}
+                style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
                 placeholder="x"
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>%:</span>
-              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 70, textAlign: 'right' }}>{peratusSebenar}</span>
+              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 120, textAlign: 'right' }}>{peratusSebenar}</span>
             </div>
           </div>
         );
       case "Peratus Minimum":
-        const peratusMinSebenar = kpi.peratus.y && kpi.peratus.x ? ((kpi.peratus.x / kpi.peratus.y) * 100).toFixed(2) : "-";
+        const peratusMinSebenar = kpi.peratusMinimum?.y && kpi.peratusMinimum?.x ? ((kpi.peratusMinimum.x / kpi.peratusMinimum.y) * 100).toFixed(2) : "-";
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelY || 'y'}:</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratusMinimum?.labelY || 'y'}:</span>
               <input
-                type="number"
-                value={kpi.peratus.y || ""}
-                onChange={(e) => handleUpdateKPI(index, 'peratusY', e.target.value)}
-                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                type="text"
+                value={formatNumber(kpi.peratusMinimum?.y)}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(/[^\d.-]/g, '');
+                  handleUpdateKPI(index, 'peratusMinimumY', cleanValue);
+                }}
+                style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
                 placeholder="y"
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratus.labelX || 'x'}:</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>{kpi.peratusMinimum?.labelX || 'x'}:</span>
               <input
-                type="number"
-                value={kpi.peratus.x || ""}
-                onChange={(e) => handleUpdateKPI(index, 'peratusX', e.target.value)}
-                style={{ width: 70, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
+                type="text"
+                value={formatNumber(kpi.peratusMinimum?.x)}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(/[^\d.-]/g, '');
+                  handleUpdateKPI(index, 'peratusMinimumX', cleanValue);
+                }}
+                style={{ width: 120, padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14, textAlign: 'right' }}
                 placeholder="x"
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>%:</span>
-              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 70, textAlign: 'right' }}>{peratusMinSebenar}</span>
+              <span style={{ fontSize: 14, color: '#000', fontWeight: 'normal', width: 120, textAlign: 'right' }}>{peratusMinSebenar}</span>
             </div>
           </div>
         );
