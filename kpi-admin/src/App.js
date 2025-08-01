@@ -677,6 +677,11 @@ export default function App() {
                 <MainLayout><Dashboard kpiList={kpiList} /></MainLayout>
               </ProtectedRoute>
             } />
+            <Route path="/sistem-kpi" element={
+              <ProtectedRoute>
+                <MainLayout><Dashboard kpiList={kpiList} /></MainLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/admin-utama" element={
               <ProtectedRoute>
                 <MainLayout><AdminUtama kpiList={kpiList} setKpiList={setKpiList} handleDownloadExcel={handleDownloadExcel} handleExcelUpload={handleExcelUpload} /></MainLayout>
