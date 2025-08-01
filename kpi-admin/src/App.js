@@ -461,22 +461,207 @@ export default function App() {
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws, { defval: "" });
-      // Mapping data Excel ke format kpiList
-      const mapped = data.map(row => ({
-        department: row["Bahagian"] || "",
-        kategoriUtama: row["Kategori"] || "",
-        kpi: row["Pernyataan"] || "",
-        kategori: row["Kaedah Pengukuran"] || "",
-        target: row["Target"] || "",
-        bilangan: { pencapaian: row["Pencapaian"] || "" },
-        peratus: { x: row["Pencapaian"] || "", y: row["Target"] || "" },
-        masa: { tarikhCapai: row["Pencapaian"] || "" },
-        tahap: [ { statement: row["Pernyataan"] || "", percent: row["Pencapaian"] || "" } ],
-        peruntukan: row["Peruntukan (RM)"] || "",
-        perbelanjaan: row["Perbelanjaan (RM)"] || "",
-        percentBelanja: "-",
-      }));
+      
+      // Mapping data Excel ke format kpiList dengan pemprosesan yang lebih baik
+      const mapped = data.map(row => {
+        // Bersihkan data peruntukan dan perbelanjaan
+        let peruntukan = row["Peruntukan (RM)"] || "";
+        let perbelanjaan = row["Perbelanjaan (RM)"] || "";
+        
+        // Buang "RM " prefix jika ada dan bersihkan format
+        if (typeof peruntukan === 'string') {
+          peruntukan = peruntukan.replace(/^RM\s*/, '').replace(/,/g, '').replace(/\s/g, '');
+          // Jika kosong atau "0.00", set kepada "0"
+          if (peruntukan === "" || peruntukan === "0.00" || peruntukan === "0") {
+            peruntukan = "0";
+          }
+        }
+        if (typeof perbelanjaan === 'string') {
+          perbelanjaan = perbelanjaan.replace(/^RM\s*/, '').replace(/,/g, '').replace(/\s/g, '');
+          // Jika kosong atau "0.00", set kepada "0"
+          if (perbelanjaan === "" || perbelanjaan === "0.00" || perbelanjaan === "0") {
+            perbelanjaan = "0";
+          }
+        }
+        
+        // Parse perincian untuk mendapatkan data pencapaian
+        const perincian = row["Perincian"] || "";
+        let pencapaianData = {};
+        
+        // Parse perincian berdasarkan kategori
+        if (row["Kaedah Pengukuran"] === "Bilangan") {
+          // Cari "Pencapaian: [nombor]" dalam perincian
+          const pencapaianMatch = perincian.match(/Pencapaian:\s*([0-9,]+)/);
+          if (pencapaianMatch) {
+            pencapaianData = { pencapaian: pencapaianMatch[1].replace(/,/g, '') };
+          }
+        } else if (row["Kaedah Pengukuran"] === "Peratus") {
+          // Parse data peratus dari perincian
+          const lines = perincian.split('\n');
+          let x = "", y = "", labelX = "", labelY = "";
+          
+          lines.forEach(line => {
+            if (line.includes(':')) {
+              const [label, value] = line.split(':').map(s => s.trim());
+              if (label && value) {
+                // Cari nilai yang mengandungi nombor (biasanya x dan y)
+                const numericValue = value.replace(/,/g, '').replace(/%/g, '');
+                if (!isNaN(parseFloat(numericValue))) {
+                  if (label.includes('x') || label.includes('Perbelanjaan') || label.includes('Keluar Kemiskinan') || label.includes('Belanja')) {
+                    x = numericValue;
+                    labelX = label;
+                  } else if (label.includes('y') || label.includes('Peruntukan') || label.includes('Overall') || label.includes('Zakat')) {
+                    y = numericValue;
+                    labelY = label;
+                  }
+                }
+              }
+            }
+          });
+          
+          // Jika tidak jumpa data, cuba parse berdasarkan pola umum
+          if (!x || !y) {
+            const allNumbers = perincian.match(/(\d+(?:,\d+)*)/g);
+            if (allNumbers && allNumbers.length >= 2) {
+              // Ambil 2 nombor pertama sebagai x dan y
+              x = allNumbers[0].replace(/,/g, '');
+              y = allNumbers[1].replace(/,/g, '');
+              labelX = "Pencapaian";
+              labelY = "Sasaran";
+            }
+          }
+          
+          pencapaianData = { x, y, labelX, labelY };
+        } else if (row["Kaedah Pengukuran"] === "Masa") {
+          // Cari tarikh pencapaian dalam perincian
+          const tarikhMatch = perincian.match(/Tarikh Berjaya Dicapai:\s*([0-9-]+)/);
+          if (tarikhMatch) {
+            pencapaianData = { tarikhCapai: tarikhMatch[1] };
+          }
+        } else if (row["Kaedah Pengukuran"] === "Peratus Minimum") {
+          // Parse data peratus minimum dari perincian
+          const lines = perincian.split('\n');
+          let x = "", y = "", labelX = "", labelY = "";
+          
+          lines.forEach(line => {
+            if (line.includes(':')) {
+              const [label, value] = line.split(':').map(s => s.trim());
+              if (label && value) {
+                // Cari nilai yang mengandungi nombor (biasanya x dan y)
+                const numericValue = value.replace(/,/g, '').replace(/%/g, '');
+                if (!isNaN(parseFloat(numericValue))) {
+                  if (label.includes('x') || label.includes('Perbelanjaan') || label.includes('Amil') || label.includes('Belanja')) {
+                    x = numericValue;
+                    labelX = label;
+                  } else if (label.includes('y') || label.includes('Peruntukan') || label.includes('Zakat')) {
+                    y = numericValue;
+                    labelY = label;
+                  }
+                }
+              }
+            }
+          });
+          
+          // Jika tidak jumpa data, cuba parse berdasarkan pola umum untuk Peratus Minimum
+          if (!x || !y) {
+            const allNumbers = perincian.match(/(\d+(?:,\d+)*)/g);
+            if (allNumbers && allNumbers.length >= 2) {
+              // Ambil 2 nombor pertama sebagai x dan y
+              x = allNumbers[0].replace(/,/g, '');
+              y = allNumbers[1].replace(/,/g, '');
+              labelX = "Perbelanjaan";
+              labelY = "Peruntukan";
+            }
+          }
+          
+          pencapaianData = { x, y, labelX, labelY };
+        } else if (row["Kaedah Pengukuran"] === "Tahap Kemajuan") {
+          // Parse data tahap kemajuan dari perincian
+          // Format dalam Excel: "Kelulusan JKUU (50%)"
+          const tahapMatch = perincian.match(/(.+?)\s*\((\d+)%\)/);
+          if (tahapMatch) {
+            const statement = tahapMatch[1].trim();
+            const percent = tahapMatch[2];
+            
+            // Cari index tahap yang sesuai
+            let tahapSelected = null;
+            const tahapStatements = [
+              "Mesyuarat Pengurusan",
+              "Kelulusan JKUU", 
+              "Kelulusan Mesyuarat MAIWP",
+              "Kelulusan Parlimen"
+            ];
+            
+            tahapStatements.forEach((tahap, index) => {
+              if (statement.includes(tahap) || tahap.includes(statement)) {
+                tahapSelected = index;
+              }
+            });
+            
+            // Jika tidak jumpa match yang tepat, cuba match berdasarkan peratus
+            if (tahapSelected === null) {
+              const percentNum = parseInt(percent);
+              if (percentNum <= 25) tahapSelected = 0;
+              else if (percentNum <= 50) tahapSelected = 1;
+              else if (percentNum <= 75) tahapSelected = 2;
+              else if (percentNum <= 100) tahapSelected = 3;
+            }
+            
+            pencapaianData = { 
+              tahapSelected: tahapSelected,
+              statement: statement,
+              percent: percent
+            };
+          }
+        }
+        
+        // Kira % Perbelanjaan
+        let percentBelanja = "-";
+        const peruntukanNum = parseFloat(peruntukan);
+        const perbelanjaanNum = parseFloat(perbelanjaan);
+        
+        // Handle kes di mana data adalah "NaN" atau tidak sah
+        if (peruntukan === "NaN" || perbelanjaan === "NaN") {
+          peruntukan = "0";
+          perbelanjaan = "0";
+        }
+        
+        if (!isNaN(peruntukanNum) && peruntukanNum > 0 && !isNaN(perbelanjaanNum)) {
+          let percent = (perbelanjaanNum / peruntukanNum) * 100;
+          if (percent > 100) percent = 100;
+          percentBelanja = percent.toFixed(2) + "%";
+        }
+        
+        return {
+          department: row["Bahagian"] || "",
+          kategoriUtama: row["Kategori"] || "",
+          kpi: row["Pernyataan"] || "",
+          kategori: row["Kaedah Pengukuran"] || "",
+          target: row["Target"] || "",
+          bilangan: row["Kaedah Pengukuran"] === "Bilangan" ? pencapaianData : { pencapaian: "" },
+          peratus: row["Kaedah Pengukuran"] === "Peratus" ? pencapaianData : { x: "", y: "", labelX: "", labelY: "" },
+          peratusMinimum: row["Kaedah Pengukuran"] === "Peratus Minimum" ? pencapaianData : { x: "", y: "", labelX: "", labelY: "" },
+          masa: row["Kaedah Pengukuran"] === "Masa" ? pencapaianData : { sasaranTarikh: "", tarikhCapai: "" },
+          tahap: row["Kaedah Pengukuran"] === "Tahap Kemajuan" ? [
+            { statement: "Mesyuarat Pengurusan", percent: "25" },
+            { statement: "Kelulusan JKUU", percent: "50" },
+            { statement: "Kelulusan Mesyuarat MAIWP", percent: "75" },
+            { statement: "Kelulusan Parlimen", percent: "100" }
+          ] : [
+            { statement: "", percent: "" },
+            { statement: "", percent: "" },
+            { statement: "", percent: "" },
+            { statement: "", percent: "" }
+          ],
+          tahapSelected: row["Kaedah Pengukuran"] === "Tahap Kemajuan" ? pencapaianData.tahapSelected : null,
+          peruntukan: peruntukan,
+          perbelanjaan: perbelanjaan,
+          percentBelanja: percentBelanja,
+        };
+      });
+      
       setKpiList(mapped);
+      alert(`✅ Berjaya memuat naik ${mapped.length} rekod dari fail Excel!`);
     };
     reader.readAsBinaryString(file);
   };

@@ -80,7 +80,7 @@ function UserInterface({ kpiList, onUpdateKPI }) {
       if (!updatedKPI.peratusMinimum) updatedKPI.peratusMinimum = {};
       updatedKPI.peratusMinimum.y = value;
     } else if (field === 'tahapSelected') {
-      updatedKPI.tahapSelected = parseInt(value);
+      updatedKPI.tahapSelected = value === "" ? null : parseInt(value);
     } else {
       updatedKPI[field] = value;
     }
@@ -230,7 +230,7 @@ function UserInterface({ kpiList, onUpdateKPI }) {
       case "Tahap Kemajuan":
         return (
           <select
-            value={kpi.tahapSelected || ""}
+            value={kpi.tahapSelected !== null && kpi.tahapSelected !== undefined ? kpi.tahapSelected.toString() : ""}
             onChange={(e) => handleUpdateKPI(index, 'tahapSelected', e.target.value)}
             style={{ width: "100%", padding: 8, borderRadius: 6, border: '1px solid #1976d2', fontSize: 14 }}
           >
@@ -292,7 +292,7 @@ function UserInterface({ kpiList, onUpdateKPI }) {
       return "-";
     }
     if (kpi.kategori === "Tahap Kemajuan") {
-      if (typeof kpi.tahapSelected !== 'undefined' && kpi.tahapSelected !== null) {
+      if (kpi.tahapSelected !== null && kpi.tahapSelected !== undefined && kpi.tahapSelected >= 0) {
         const row = kpi.tahap[kpi.tahapSelected];
         if (row && row.percent !== "" && !isNaN(parseFloat(row.percent))) {
           let percent = parseFloat(row.percent);

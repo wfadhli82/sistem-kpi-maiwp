@@ -282,6 +282,7 @@ function AdminUtama({ kpiList, setKpiList, handleDownloadExcel, handleExcelUploa
   return (
     <div style={{ width: "100%", maxWidth: 1200, margin: "24px auto", padding: "2vw", background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px #dbeafe", fontFamily: 'Poppins, Arial, sans-serif' }}>
       <h2 style={{ fontWeight: 700, color: '#222', marginBottom: 18 }}>Senarai KPI/ SKU</h2>
+      
       {/* Borang Data Entry */}
       <div style={{ flex: 1, minWidth: 320, maxWidth: 700, margin: '0 auto' }}>
         <h2 style={{ fontWeight: 700, color: '#1976d2', letterSpacing: 1, marginBottom: 28 }}>Maklumat Untuk Diisi oleh Admin</h2>
