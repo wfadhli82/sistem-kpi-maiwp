@@ -116,9 +116,17 @@ export default function App() {
   };
 
   function formatRM(value) {
-    if (!value) return "";
+    if (!value || value === "" || value === "0" || value === "0.00") return "RM 0.00";
     const number = Number(value);
-    if (isNaN(number)) return "";
+    if (isNaN(number)) return "RM 0.00";
+    return "RM " + number.toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Fungsi untuk format currency untuk Excel
+  function formatCurrency(value) {
+    if (!value || value === "" || value === "0" || value === "0.00") return "RM 0.00";
+    const number = Number(value);
+    if (isNaN(number)) return "RM 0.00";
     return "RM " + number.toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
@@ -263,19 +271,23 @@ export default function App() {
       "Perincian": (() => {
         switch (kpi.kategori) {
           case "Bilangan":
-            return `Pencapaian: ${kpi.bilangan.pencapaian}`;
+            const sasaranBilangan = kpi.bilangan.sasaran || kpi.target || "-";
+            const pencapaianBilangan = kpi.bilangan.pencapaian || "-";
+            return `Sasaran: ${sasaranBilangan}${String.fromCharCode(10)}Pencapaian: ${pencapaianBilangan}`;
           case "Peratus":
             const peratusY = parseFloat(kpi.peratus.y);
             const peratusX = parseFloat(kpi.peratus.x);
             const peratusSebenar = (!isNaN(peratusY) && peratusY > 0 && !isNaN(peratusX)) ? ((peratusX / peratusY) * 100).toFixed(2) : "-";
-            return `${kpi.peratus.labelY || 'y'}: ${kpi.peratus.y}, ${kpi.peratus.labelX || 'x'}: ${kpi.peratus.x}, % Sebenar: ${peratusSebenar}%`;
+            return `${kpi.peratus.labelY || 'y'}: ${kpi.peratus.y}${String.fromCharCode(10)}${kpi.peratus.labelX || 'x'}: ${kpi.peratus.x}${String.fromCharCode(10)}% Sebenar: ${peratusSebenar}%`;
           case "Peratus Minimum":
             const minY = parseFloat(kpi.peratusMinimum?.y);
             const minX = parseFloat(kpi.peratusMinimum?.x);
             const minSebenar = (!isNaN(minY) && minY > 0 && !isNaN(minX)) ? ((minX / minY) * 100).toFixed(2) : "-";
-            return `${kpi.peratusMinimum?.labelY || 'Peruntukan'}: ${kpi.peratusMinimum?.y}, ${kpi.peratusMinimum?.labelX || 'Perbelanjaan'}: ${kpi.peratusMinimum?.x}, % Sebenar: ${minSebenar}%`;
+            return `${kpi.peratusMinimum?.labelY || 'Peruntukan'}: ${kpi.peratusMinimum?.y}${String.fromCharCode(10)}${kpi.peratusMinimum?.labelX || 'Perbelanjaan'}: ${kpi.peratusMinimum?.x}${String.fromCharCode(10)}% Sebenar: ${minSebenar}%`;
           case "Masa":
-            return `Tarikh Berjaya Dicapai: ${kpi.masa.tarikhCapai}`;
+            const sasaranTarikh = kpi.masa.sasaranTarikh || kpi.target || "-";
+            const tarikhCapai = kpi.masa.tarikhCapai || "-";
+            return `Sasaran Tarikh: ${sasaranTarikh}${String.fromCharCode(10)}Tarikh Berjaya Dicapai: ${tarikhCapai}`;
           case "Tahap Kemajuan":
             if (typeof kpi.tahapSelected !== 'undefined' && kpi.tahapSelected !== null) {
               const row = kpi.tahap[kpi.tahapSelected];
@@ -287,11 +299,147 @@ export default function App() {
         }
       })(),
       "Peratus Pencapaian": kiraPeratusPencapaian(kpi),
-      "Peruntukan (RM)": kpi.peruntukan,
-      "Perbelanjaan (RM)": kpi.perbelanjaan,
+      "Peruntukan (RM)": formatRM(kpi.peruntukan),
+      "Perbelanjaan (RM)": formatRM(kpi.perbelanjaan),
       "% Perbelanjaan": kpi.percentBelanja,
     }));
+    
+    // Create worksheet with custom formatting
     const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Set column widths for better formatting
+    ws['!cols'] = [
+      { width: 5 },   // Bil
+      { width: 15 },  // Bahagian
+      { width: 10 },  // Kategori
+      { width: 50 },  // Pernyataan
+      { width: 20 },  // Kaedah Pengukuran
+      { width: 15 },  // Target
+      { width: 40 },  // Perincian
+      { width: 20 },  // Peratus Pencapaian
+      { width: 15 },  // Peruntukan (RM)
+      { width: 15 },  // Perbelanjaan (RM)
+      { width: 15 }   // % Perbelanjaan
+    ];
+    
+    // Enable text wrapping for Perincian column and set row heights
+    const perincianCol = 'G'; // Column G is Perincian
+    for (let i = 2; i <= data.length + 1; i++) {
+      const cellRef = `${perincianCol}${i}`;
+      if (!ws[cellRef]) continue;
+      
+      ws[cellRef].s = {
+        alignment: {
+          vertical: 'top',
+          horizontal: 'left',
+          wrapText: true
+        }
+      };
+    }
+    
+    // Format currency columns (Peruntukan and Perbelanjaan)
+    const peruntukanCol = 'I'; // Column I is Peruntukan (RM)
+    const perbelanjaanCol = 'J'; // Column J is Perbelanjaan (RM)
+    
+    for (let i = 2; i <= data.length + 1; i++) {
+      // Format Peruntukan column
+      const peruntukanCellRef = `${peruntukanCol}${i}`;
+      if (ws[peruntukanCellRef]) {
+        ws[peruntukanCellRef].s = {
+          alignment: {
+            horizontal: 'right',
+            vertical: 'center'
+          },
+          font: {
+            color: { rgb: "2E7D32" }, // Green color for positive values
+            bold: true
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: "CCCCCC" } },
+            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+            left: { style: 'thin', color: { rgb: "CCCCCC" } },
+            right: { style: 'thin', color: { rgb: "CCCCCC" } }
+          }
+        };
+      }
+      
+      // Format Perbelanjaan column
+      const perbelanjaanCellRef = `${perbelanjaanCol}${i}`;
+      if (ws[perbelanjaanCellRef]) {
+        ws[perbelanjaanCellRef].s = {
+          alignment: {
+            horizontal: 'right',
+            vertical: 'center'
+          },
+          font: {
+            color: { rgb: "D32F2F" }, // Red color for expenditure
+            bold: true
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: "CCCCCC" } },
+            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+            left: { style: 'thin', color: { rgb: "CCCCCC" } },
+            right: { style: 'thin', color: { rgb: "CCCCCC" } }
+          }
+        };
+      }
+    }
+    
+    // Format percentage columns
+    const peratusPencapaianCol = 'H'; // Column H is Peratus Pencapaian
+    const peratusPerbelanjaanCol = 'K'; // Column K is % Perbelanjaan
+    
+    for (let i = 2; i <= data.length + 1; i++) {
+      // Format Peratus Pencapaian column
+      const peratusCellRef = `${peratusPencapaianCol}${i}`;
+      if (ws[peratusCellRef]) {
+        ws[peratusCellRef].s = {
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center'
+          },
+          font: {
+            bold: true,
+            color: { rgb: "1976D2" } // Blue color for percentages
+          }
+        };
+      }
+      
+      // Format % Perbelanjaan column
+      const peratusBelanjaCellRef = `${peratusPerbelanjaanCol}${i}`;
+      if (ws[peratusBelanjaCellRef]) {
+        ws[peratusBelanjaCellRef].s = {
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center'
+          },
+          font: {
+            bold: true,
+            color: { rgb: "FF6B35" } // Orange color for expenditure percentage
+          }
+        };
+      }
+    }
+    
+    // Set row heights for better display
+    if (!ws['!rows']) ws['!rows'] = [];
+    for (let i = 1; i <= data.length + 1; i++) {
+      ws['!rows'][i] = { hpt: 60 }; // Set row height to 60 points
+    }
+    
+    // Format header row
+    const headerRow = 1;
+    for (let col = 0; col < Object.keys(data[0] || {}).length; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: headerRow - 1, c: col });
+      if (ws[cellRef]) {
+        ws[cellRef].s = {
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          fill: { fgColor: { rgb: "1976D2" } },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+      }
+    }
+    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "KPI_SKU");
     XLSX.writeFile(wb, "Senarai_KPI_SKU.xlsx");
